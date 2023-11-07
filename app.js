@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+const ejsMate = require('ejs-mate'); //Library to use one template for all views.
 const methodOverride = require('method-override'); //Since forms can only send POST and Get from browser so need method-override to use put, patch, delete etc. 
 const Campground = require('./models/campground');
 
@@ -16,9 +17,11 @@ mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp')
 
 const app = express();
 
+app.engine('ejs', ejsMate); //Tell express to use ejsMate instead of the deafult engine.
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
+//use tells express to use whats inputed during every request.
 app.use(express.urlencoded({extended: true})); //Parse the body.
 app.use(methodOverride('_method')); //Pass in the string to be used for query-string.
 

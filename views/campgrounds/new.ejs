@@ -1,11 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Campground</title>
-</head>
-<body>
+<% layout('layouts/boilerplate')%> <!-- All content will be passed to the boilerplate template as body. -->
     <form action="/campgrounds" method="POST"> <!-- Send via POST-req to our server. -->
         <div>
             <label for="title">Title</label>
@@ -19,6 +12,5 @@
         <button>Add Campground</button>
     </form>
     <a href="/campgrounds">All Campgrounds</a>
-</body>
-</html>
+
 
