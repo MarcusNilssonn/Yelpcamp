@@ -2,11 +2,12 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate'); //Library to use one template for all views.
-const {campgroundSchema} = require('./schemas')
+const {campgroundSchema, reviewSchema} = require('./schemas')
 const catchAsync = require('./utility/catchAsync');
 const ExpressError = require('./utility/ExpressError');
 const methodOverride = require('method-override'); //Since forms can only send POST and Get from browser so need method-override to use put, patch, delete etc. 
 const Campground = require('./models/campground');
+const Review = require('./models/review');
 
 //Connect and throw error if failed.
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp') 
@@ -28,11 +29,21 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({extended: true})); //Parse the body.
 app.use(methodOverride('_method')); //Pass in the string to be used for query-string.
 
+//Validation
 const validateCampground = (req, res, next) => {
-   
     const {error} = campgroundSchema.validate(req.body); //if error, destructure from result and get the error-part.
     if(error){
         const msg = error.details.map(el => el.message).join(',') //Get details from array and map over.
+        throw new ExpressError(msg, 400)
+    } else {
+        next();
+    }
+}
+
+const validateReview = (req, res, next) => {
+    const {error} = reviewSchema.validate(req.body);
+    if(error){
+        const msg = error.details.map(el => el.message).join(',') 
         throw new ExpressError(msg, 400)
     } else {
         next();
@@ -56,7 +67,7 @@ app.get('/campgrounds/new', (req, res) => {
 
 
 app.get('/campgrounds/:id', catchAsync(async (req, res) => { //Route for each campground based on id.
-    const campground = await Campground.findById(req.params.id)
+    const campground = await Campground.findById(req.params.id).populate('reviews'); //get the reviews for the campground.
     res.render('campgrounds/show', {campground});
 }));
 
@@ -86,6 +97,15 @@ app.delete('/campgrounds/:id', catchAsync(async (req,res) => {
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
 }));
+
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async( req, res) => {
+    const campground = await Campground.findById(req.params.id);
+    const review = new Review(req.body.review); //Make our new review
+    campground.reviews.push(review);
+    await review.save();
+    await campground.save();
+    res.redirect(`/campgrounds/${campground._id}`);
+}))
 
 app.all('*', (req, res, next) => { //for all request types and all paths.
     next(new ExpressError('Page not found', 404));
