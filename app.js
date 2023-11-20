@@ -10,7 +10,7 @@ const Campground = require('./models/campground');
 const Review = require('./models/review');
 
 //Connect and throw error if failed.
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp') 
+mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}) 
     .then(() => {
         console.log("Database connected")
     })
@@ -105,6 +105,13 @@ app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async( req, res)
     await review.save();
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`);
+}))
+
+app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async(req, res) => {
+    const {id, reviewId } = req.params;
+    await Campground.findByIdAndUpdate(id, {$pull: { reviews: reviewId}});//Takes the id from reviewId and pulls that one out from reviews-array.
+    await Review.findByIdAndDelete(reviewId); //Delete the entire review.
+    res.redirect(`/campgrounds/${id}`);
 }))
 
 app.all('*', (req, res, next) => { //for all request types and all paths.
