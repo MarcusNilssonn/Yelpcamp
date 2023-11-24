@@ -64,6 +64,7 @@ passport.deserializeUser(User.deserializeUser()); //How we get a user out of tha
 //   );
 
 app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success'); //Setting up a middleware. On every reuest, whatever is in the flash under 'success' we are going to put in to our locals under success.
     res.locals.error = req.flash('error');
     next();
