@@ -9,9 +9,14 @@ const mongoSanitize = require("express-mongo-sanitize");
 const methodOverride = require('method-override'); //Since forms can only send POST and Get from browser so need method-override to use put, patch, delete etc. 
 const Campground = require('./models/campground');
 const Review = require('./models/review');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
 
-const campgrounds = require('./routes/campgrounds');
-const reviews = require('./routes/reviews');
+//Require the routes.
+const userRoutes = require('./routes/users');
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
 
 //Connect and throw error if failed.
 mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false}) 
@@ -45,11 +50,18 @@ const sessionConfig = {
 }
 app.use(session(sessionConfig));
 app.use(flash());
-app.use(
-    mongoSanitize({
-      replaceWith: "_",
-    })
-  );
+app.use(passport.initialize());
+app.use(passport.session()); //So not have to login on every request. Needs to be after sessionConfig.
+passport.use(new LocalStrategy(User.authenticate())); //The authentication-method from passport-mongoose applied on the User.
+
+passport.serializeUser(User.serializeUser()); //How we serialize a user and store a user in the session.
+passport.deserializeUser(User.deserializeUser()); //How we get a user out of that session.
+
+// app.use(
+//     mongoSanitize({
+//       replaceWith: "_",
+//     })
+//   );
 
 app.use((req, res, next) => {
     res.locals.success = req.flash('success'); //Setting up a middleware. On every reuest, whatever is in the flash under 'success' we are going to put in to our locals under success.
@@ -57,9 +69,18 @@ app.use((req, res, next) => {
     next();
 })
 
+app.get('/fakeUser', async (req, res) => {
+    const user = new User({email: 'Mack@gmail.com', username: 'Mack'});
+    const newUser = await User.register(user, 'hej123'); //Takes the entire user-model and a password and hash the password.
+    res.send(newUser);
+})
+
+
+
 //Routehandlers
-app.use('/campgrounds', campgrounds); //So that we dont need to specify campground in our routes.
-app.use('/campgrounds/:id/reviews', reviews);
+app.use('/', userRoutes);
+app.use('/campgrounds', campgroundRoutes); //So that we dont need to specify campground in our routes.
+app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 
 app.get('/', (req, res) => {
