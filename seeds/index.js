@@ -21,6 +21,7 @@ const seedDB = async () => {
         const random1000 = Math.floor(Math.random() * 1000) //1000 cities in the array. Choose a random one.
         const price = Math.floor(Math.random() *20)+10;
         const camp = new Campground({
+            author: '6564b66be869833ebca768e7', //Setting all camps to have the/belong to same author.
             location: `${cities[random1000].city}, ${cities[random1000].state}`, //Put location to a random city and state from cities.
             title: `${sample(descriptors)} ${sample(places)}`,
             image: 'https://source.unsplash.com/random/?camping',
