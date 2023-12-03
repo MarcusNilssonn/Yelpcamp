@@ -1,3 +1,7 @@
+if(process.env.NODE_ENV !== "production") { //If we are running in development mode, require the dotenv package and take the variables in the .env file and adds to the process.env-file so we can use them everywhere.
+    require('dotenv').config();
+}
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');

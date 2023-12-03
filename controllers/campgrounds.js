@@ -1,4 +1,5 @@
 const Campground = require('../models/campground');
+const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => { 
     const campgrounds = await Campground.find({});
@@ -12,6 +13,7 @@ module.exports.renderNewForm = (req, res) => {
 module.exports.createCampground = async(req, res, next) => { 
     // if(!req.body.campground) throw new ExpressError('Invald campground data', 400);
     const campground = new Campground(req.body.campground); //Create new campground with our submitted form/data.
+    campground.image = req.files.map(f => ({url: f.path, filename: f.filename})); //file is an array with info about image (Thanks to Multer). Map over the array and create objects with path and name.
     campground.author = req.user._id; //Set the user id from the made campground to the id of the currently logged in user.
     await campground.save();
     req.flash('success', 'Successfully made a new campground');
@@ -64,6 +66,16 @@ module.exports.renderEditForm = async (req,res) => {
 module.exports.updateCampground = async(req, res) => { 
     const { id } = req.params; //Gives the id.
     const campground = await Campground.findByIdAndUpdate(id, {...req.body.campground}) //Finding and updating all at once.
+    const imgs = req.files.map(f => ({url: f.path, filename: f.filename})); //Make an array
+    campground.image.push(...imgs); //Use spread to copy from array in to the existing array.
+    await campground.save();
+    //Delete images
+    if(req.body.deleteImages){ //If there are any images in the array deleteImages.
+        for(let filename of req.body.deleteImages){
+            await cloudinary.uploader.destroy(filename);
+        }
+        await campground.updateOne({$pull: {image: {filename: {$in: req.body.deleteImages} } } }) //Pull pulls image out from an array and checks if it an image with filename inside the array of deleted images.
+    }
     req.flash('success', 'Successfully updated campground')
     res.redirect(`/campgrounds/${campground._id}`)
 }
