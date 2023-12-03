@@ -102,7 +102,7 @@
 
 <script>
   const mapToken = '<%-process.env.MAPBOX_TOKEN%>'; //Needs to come before next script runs. Gives the MAPBOX token to pass in the showpagemap.js file.
-  const campground = <%-JSON.stringify(campground)%>;
+  const campground = <%- JSON.stringify(campground) %>;
 </script>
 
 <script src="/javascripts/showPageMap.js"></script>
