@@ -24,10 +24,14 @@ const seedDB = async () => {
             author: '6564b66be869833ebca768e7', //Setting all camps to have the/belong to same author.
             location: `${cities[random1000].city}, ${cities[random1000].state}`, //Put location to a random city and state from cities.
             title: `${sample(descriptors)} ${sample(places)}`,
+            geometry: {
+                type: "Point",
+                coordinates: [18.071093, 59.325117]
+            },
             image: [
                 {
-                    url: 'https://res.cloudinary.com/dnzr2e8fz/image/upload/v1701596764/YelpCamp/ajxwvcutuylemuoakbog.jpg',
-                    filename: 'YelpCamp/ajxwvcutuylemuoakbog'
+                    url: 'https://res.cloudinary.com/dnzr2e8fz/image/upload/v1701596764/YelpCamp/pgv5beqtpwrurkdkooe5.jpg',
+                    filename: 'YelpCamp/pgv5beqtpwrurkdkooe5'
                 }
             ],
             description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus rerum reiciendis pariatur incidunt asperiores qui atque enim nostrum, totam debitis fugiat delectus. Ipsum a laudantium esse est molestiae iste blanditiis!',

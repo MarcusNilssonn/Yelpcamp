@@ -1,4 +1,7 @@
 const Campground = require('../models/campground');
+const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
+const mapBoxToken = process.env.MAPBOX_TOKEN;
+const geocoder = mbxGeocoding({accessToken : mapBoxToken}); //geocoder now contains 2 methods.
 const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => { 
@@ -10,12 +13,18 @@ module.exports.renderNewForm = (req, res) => {
     res.render('campgrounds/new');
 }
 
+//Create campground
 module.exports.createCampground = async(req, res, next) => { 
     // if(!req.body.campground) throw new ExpressError('Invald campground data', 400);
+    const geoData = await geocoder.forwardGeocode({
+        query: req.body.campground.location,
+        limit: 1
+    }).send()
     const campground = new Campground(req.body.campground); //Create new campground with our submitted form/data.
+    campground.geometry = geoData.body.features[0].geometry; //Add on geometry which comes from Geocoding API.
     campground.image = req.files.map(f => ({url: f.path, filename: f.filename})); //file is an array with info about image (Thanks to Multer). Map over the array and create objects with path and name.
     campground.author = req.user._id; //Set the user id from the made campground to the id of the currently logged in user.
-    await campground.save();
+    await campground.save(); //save.
     req.flash('success', 'Successfully made a new campground');
     res.redirect(`campgrounds/${campground._id}`) //Redirect to new id page.
 }
