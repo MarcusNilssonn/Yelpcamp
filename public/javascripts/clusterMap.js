@@ -1,11 +1,13 @@
 mapboxgl.accessToken = mapToken;
 const map = new mapboxgl.Map({
-container: 'map',
+container: 'cluster-map',
 style: 'mapbox://styles/mapbox/dark-v11',
 center: [-103.5917, 40.6699],
 zoom: 3
 });
  
+map.addControl(new mapboxgl.NavigationControl());
+
 map.on('load', () => {
 // Add a new source from our GeoJSON data and
 // set the 'cluster' option to true. GL-JS will
@@ -101,10 +103,8 @@ zoom: zoom
 // the location of the feature, with
 // description HTML from its properties.
 map.on('click', 'unclustered-point', (e) => { //When clicking on an unclustered point.
-const coordinates = e.features[0].geometry.coordinates.slice();
-const mag = e.features[0].properties.mag;
-const tsunami =
-e.features[0].properties.tsunami === 1 ? 'yes' : 'no';
+    const {popUpMarkup} = e.features[0].properties;
+    const coordinates = e.features[0].geometry.coordinates.slice();
  
 // Ensure that if the map is zoomed out such that
 // multiple copies of the feature are visible, the
@@ -115,9 +115,7 @@ coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
  
 new mapboxgl.Popup()
 .setLngLat(coordinates)
-.setHTML(
-`magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`
-)
+.setHTML(popUpMarkup)
 .addTo(map);
 });
  

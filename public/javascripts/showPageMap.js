@@ -6,6 +6,9 @@ const map = new mapboxgl.Map({
   zoom: 9, // starting zoom
 });
 
+//Adds a bar to zoom in and out on the map.
+map.addControl(new mapboxgl.NavigationControl());
+
 //Create a marker on the map.
 new mapboxgl.Marker()
     .setLngLat(campground.geometry.coordinates)

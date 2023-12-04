@@ -4,7 +4,7 @@ const {places, descriptors} = require('./seedHelpers');
 const Campground = require('../models/campground');
 
 //Connect and throw error if failed.
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, useUnifiedTopology: true}) 
+mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true}) 
     .then(() => {
         console.log("Database connected")
     })
@@ -17,13 +17,15 @@ const sample = array => array[Math.floor(Math.floor(Math.random() * array.length
 
 const seedDB = async () => {
     await Campground.deleteMany({}); //Start with deleting everything.
-    for(let i = 0; i< 120; i++){ //50 campgrounds.
-        const random1000 = Math.floor(Math.random() * 1000) //1000 cities in the array. Choose a random one.
+    for(let i = 0; i< 100; i++){ //50 campgrounds.
+        const random1000 = Math.floor(Math.random() * 1000); //1000 cities in the array. Choose a random one.
         const price = Math.floor(Math.random() *20)+10;
         const camp = new Campground({
             author: '6564b66be869833ebca768e7', //Setting all camps to have the/belong to same author.
             location: `${cities[random1000].city}, ${cities[random1000].state}`, //Put location to a random city and state from cities.
             title: `${sample(descriptors)} ${sample(places)}`,
+            description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus rerum reiciendis pariatur incidunt asperiores qui atque enim nostrum, totam debitis fugiat delectus. Ipsum a laudantium esse est molestiae iste blanditiis!',
+            price,
             geometry: {
                 type: "Point",
                 coordinates: [
@@ -36,9 +38,7 @@ const seedDB = async () => {
                     url: 'https://res.cloudinary.com/dnzr2e8fz/image/upload/v1701596764/YelpCamp/pgv5beqtpwrurkdkooe5.jpg',
                     filename: 'YelpCamp/pgv5beqtpwrurkdkooe5'
                 }
-            ],
-            description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Necessitatibus rerum reiciendis pariatur incidunt asperiores qui atque enim nostrum, totam debitis fugiat delectus. Ipsum a laudantium esse est molestiae iste blanditiis!',
-            price
+            ]
         })
         await camp.save()
     }
