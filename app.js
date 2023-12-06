@@ -9,13 +9,16 @@ const ejsMate = require('ejs-mate'); //Library to use one template for all views
 const session = require('express-session');
 const flash = require('connect-flash');
 const ExpressError = require('./utility/ExpressError');
-const mongoSanitize = require("express-mongo-sanitize");
+
 const methodOverride = require('method-override'); //Since forms can only send POST and Get from browser so need method-override to use put, patch, delete etc. 
 const Campground = require('./models/campground');
 const Review = require('./models/review');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
+const helmet = require('helmet'); //Library for setting HTTP headers.
+
+const mongoSanitize = require('express-mongo-sanitize'); //Prevent $signs in the query.
 
 //Require the routes.
 const userRoutes = require('./routes/users');
@@ -41,19 +44,71 @@ app.set('views', path.join(__dirname, 'views'))
 //use tells express to use whats inputed during every request.
 app.use(express.urlencoded({extended: true})); //Parse the body.
 app.use(methodOverride('_method')); //Pass in the string to be used for query-string.
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(mongoSanitize());
+
 const sessionConfig = {
+    name: "session", //Set the name of the cookie. Good to not use the default name.
     secret: 'Shouldbeabettersecret',
     resave: false, //Remove deprecation warnings.
     saveUninitialized: true, //Remove deprecation warnings.
     cookie: { //Setting some options for the cookie that we get back.
-        httpOnly:true, 
+        httpOnly:true, //Cookies only acceptable over http and not Javascript.
+        // secure: true, //Cookies can only be configed over secure connection (not localhost).
         expires: Date.now() + 1000 * 60 * 60 *24 * 7, //Convert the milliseconds and put an expiration date on the cookie. 7 days from now.
         maxAge:1000 * 60 * 60 *24 * 7 
     }
 }
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(helmet());
+
+//Confige content Security policy setup. For example setting where we are allowed to get images from.
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://api.mapbox.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net",
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://api.mapbox.com/",
+    "https://api.tiles.mapbox.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+    "https://cdn.jsdelivr.net",
+];
+const connectSrcUrls = [
+    "https://api.mapbox.com/",
+    "https://a.tiles.mapbox.com/",
+    "https://b.tiles.mapbox.com/",
+    "https://events.mapbox.com/",
+];
+const fontSrcUrls = [];
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com/dnzr2e8fz/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+                "https://images.unsplash.com/",
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
+
 app.use(passport.initialize());
 app.use(passport.session()); //So not have to login on every request. Needs to be after sessionConfig.
 passport.use(new LocalStrategy(User.authenticate())); //The authentication-method from passport-mongoose applied on the User.
@@ -61,11 +116,6 @@ passport.use(new LocalStrategy(User.authenticate())); //The authentication-metho
 passport.serializeUser(User.serializeUser()); //How we serialize a user and store a user in the session.
 passport.deserializeUser(User.deserializeUser()); //How we get a user out of that session.
 
-// app.use(
-//     mongoSanitize({
-//       replaceWith: "_",
-//     })
-//   );
 
 app.use((req, res, next) => {
     res.locals.currentUser = req.user;

@@ -3,10 +3,10 @@
     <div class="col-6 offset-3">
         <div class="alert alert-danger" role="alert">
             <h4 class="alert-heading"><%=err.message%></h4>
-            <p>Oops, looks like somoething went wrong. Lorem ipsum dolor sit amet consectetur adipisicing elit. Natus ipsum pariatur dolor aut, 
-                asperiores veritatis iure quia eligendi, vero fugiat nostrum quam in harum ad delectus repudiandae minima optio quo?</p>
-            <hr>
-            <p class="mb-0">Make sure you use the right stuff.</p>
+            <% if(process.env.NODE_ENV !== "production") { %> <!-- Dont display the error stack outside of development. -->
+                <p><%= err.stack %></p>
+            <% } %>
           </div>
     </div>
 </div>
+
