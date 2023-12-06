@@ -7,6 +7,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate'); //Library to use one template for all views.
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const flash = require('connect-flash');
 const ExpressError = require('./utility/ExpressError');
 
@@ -24,9 +25,13 @@ const mongoSanitize = require('express-mongo-sanitize'); //Prevent $signs in the
 const userRoutes = require('./routes/users');
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
+const dbUrl = 'mongodb://127.0.0.1:27017/yelp-camp'; 
+
+// const dbUrl = process.env.DB_URL; //Cloud database in Atlas.
+//'mongodb://127.0.0.1:27017/yelp-camp' //Local database
 
 //Connect and throw error if failed.
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false}) 
+mongoose.connect(dbUrl, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false}) 
     .then(() => {
         console.log("Database connected")
     })
@@ -34,6 +39,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {useNewUrlParser: true, 
         console.log("Error")
         console.log(err)
     })
+
 
 const app = express();
 
@@ -47,7 +53,20 @@ app.use(methodOverride('_method')); //Pass in the string to be used for query-st
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(mongoSanitize());
 
+const store = MongoStore.create({ //Store sessions in Mongo.
+    mongoUrl: dbUrl,
+    touchAfter: 24 * 60 * 60, //Dont save if no changes to the data.
+    crypto: {
+        secret: 'thisshouldbeabettersecret!'
+    }
+});
+
+store.on('error', function(e){
+    console.log('SESSION STORE ERROR', e)
+})
+
 const sessionConfig = {
+    store, 
     name: "session", //Set the name of the cookie. Good to not use the default name.
     secret: 'Shouldbeabettersecret',
     resave: false, //Remove deprecation warnings.
