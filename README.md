@@ -4,4 +4,6 @@ Following project is a website (part of The Web Developer Bootcamp 2023 course b
 
 The project includes among other things Express, MongoDB, Node.js and Bootstrap.
 
-The site is under construction.
+<img src="images/frontpage.png" alt="Frontpage" width="300" height="200">
+
+## 
